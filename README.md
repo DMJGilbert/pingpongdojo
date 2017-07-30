@@ -1,5 +1,6 @@
 # Ping Pong Dojo
 ![alt Screenshot](https://raw.githubusercontent.com/dmjgilbert/pingpongdojo/master/screenshot.png)
+
 A simple react project which was originally created at (React Dojo London)[http://www.reactdojo.london]
 
 ## Getting Started
