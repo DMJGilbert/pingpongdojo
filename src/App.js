@@ -1,121 +1,86 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
+import React, {Component} from 'react';
 import './App.css';
-const stages = [{matches:[{
-  players: ["👻 Darren", "🤖 Manuel"]
-},{
-  players: ["💩 Dmitry", "🎃 Smith"]
-}]}]
 
+import Stage from './components/Stage.js';
 
-class Match extends Component {
-  constructor(props){
-    super(props);
-    this.state = {
-      score: [0, 0],
-      currentlyPlaying: true
+const players = ["🐙 Darren", "🤖 Manuel", "💩 Dmitry", "🦄 Lorraine", "👻 Todd", "🕷 Peter", "🦇 Bruce", "🐧 Oswald"];
+
+const style = {
+	app: {
+		display: "flex"
+	}
+}
+
+function shuffleArray(array) {
+    for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
     }
-  }
-  change(index) {
-    return (event) => {
-      let scores = this.state.score;
-      scores[index] = event.target.value;
-      let currentlyPlaying = true;
-      if (scores[index] >= 10) {
-        currentlyPlaying = false;
-        this.props.setWinner(index);
-      }
-      this.setState({ score: scores, currentlyPlaying })
-    }
-  }
-  render() {
-    return (
-      <div>
-        {this.props.match.players.map((player, index) => <Player player={player} score={this.state.score[index]} currentlyPlaying={this.state.currentlyPlaying} onChange={this.change(index)}/>)}
-      </div>
-    );
-  }
+    return array;
+}
+
+function createStages(players) {
+	let stages = [{
+		matches: []
+	}];
+	shuffleArray(players).forEach((player, index) => {
+		let matchIndex = Math.floor(index / 2);
+		let playerIndex = index % 2;
+		if (!stages[0].matches[matchIndex]) {
+			stages[0].matches[matchIndex] = {
+				winnerStage: false,
+				players: []
+			}
+		}
+		stages[0].matches[matchIndex].players[playerIndex] = player;
+	});
+	return stages;
 }
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      stages: stages
-    }
-  }
+	constructor(props) {
+		super(props);
+		const stages = createStages(players);
+		this.state = {
+			players: players,
+			stages: stages
+		}
+	}
 
-  addWinner(index) {
-    return (winner) => {
-      if(!this.state.stages[index + 1]) {
-        this.state.stages.push({
-            matches:[{
-              players: [winner]
-            }]
-        });
-        this.setState({
-          stages: this.state.stages
-        })
-      }else {
-        this.state.stages[1].matches[0].players.push([winner])
-        this.setState({
-          stages: this.state.stages
-        })
-      }
-    }
-  }
+	setMatchWinner(stageIndex, matchIndex, player) {
+		let state = this.state;
+		let newStageIndex = stageIndex + 1;
+		if (!state.stages[newStageIndex]) {
+			state.stages[newStageIndex] = {
+				winnerStage: (state.players.length / 2) - 2 === stageIndex,
+				matches: []
+			};
+		}
+		let newMatchIndex = Math.floor(matchIndex / 2);
+		if (!state.stages[newStageIndex].matches[newMatchIndex]) {
+			state.stages[newStageIndex].matches[newMatchIndex] = {
+				players: []
+			};
+		}
+		let playerIndex = matchIndex % 2;
+		state.stages[newStageIndex].matches[newMatchIndex].players[playerIndex] = player;
+		this.setState(state);
+	}
 
-  render() {
-    return (
-      <div className="App"  style={{
-        display: "flex",
-        flexDirection: "row"
-      }}>
-        {stages.map((stage, index) => <Stage matches={stage.matches} addWinner={this.addWinner(index)}/>)}
-      </div>
-    );
-  }
+	render() {
+		return (
+			<div className="App" style={style.app}>
+				{this.state.stages.map((stage, index) => (
+					<Stage {...stage}
+						setMatchWinner={(matchIndex, player) => (
+							this.setMatchWinner(index, matchIndex, player)
+						)}/>
+				))}
+			</div>
+		);
+	}
 }
-
-class Player extends Component {
-  onChange(event){
-    stages[0].matches[0].score = [10, 10]
-  }
-  render() {
-    return (
-      <div style={{
-        color: "#fff",
-        backgroundColor: "#00c1ad",
-        minWidth: "200px",
-        margin: "10px",
-        padding: "10px"
-      }}>
-        {this.props.player} &nbsp;&nbsp;
-        {<input disabled={!this.props.currentlyPlaying} value={this.props.score} type="number" onChange={this.props.onChange} />}
-      </div>
-    );
-  }
-}
-
-class Stage extends Component {
-  constructure (props) {
-    // super()
-  }
-
-  winner(index) {
-    return (winnerIndex) => {
-      this.props.addWinner(this.props.matches[index].players[winnerIndex])
-    }
-  }
-
-  render() {
-    return (
-      <div>
-        {this.props.matches.map((match, index) => <Match match={match} setWinner={this.winner(index)}/>)}
-      </div>
-    );
-  }
-}
-
 
 export default App;
